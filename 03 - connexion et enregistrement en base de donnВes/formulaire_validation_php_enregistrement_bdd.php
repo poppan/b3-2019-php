@@ -1,133 +1,105 @@
 <?php
 // connection base mysql
+$db_config = [
+    'host'      => 'localhost', // machine, la machine locale s'appelle par convention "localhost"
+    'schema'    => 'projet', // nom du schema
+    'port'      => 3306, // 3306 est le port par defaut de mysql
+    'user'      => 'mysqluser', // nom d'utilisateur
+    'password'  => 'mysqlpassword', // mot de passe
+    'charset'   => 'utf8', // le charset utilisé pour communiquer avec mysql via PDO
+];
 
-$dbhost = 'localhost'; // machine, la machine locale s'appelle par convention "localhost"
-$dbname = 'projet'; // nom de la base de donn�es
-$dbuser = 'root'; // nom d'utilisateur base de donn�es
-$dbpassword = ''; // mot de passe base de donn�es
+// try/catch pour lever les erreurs de connexion
 
-// on se connecte avec les acces,  IL FAUT QUE LA BASE EXISTE POUR MANIPULER
-$dbh = new PDO(
-    'mysql:host='. $dbhost .';dbname='. $dbname,
-    $dbuser,
-    $dbpassword
-);
-/*
- *
- *
- *
- *
- *
+try{
+    // on se connecte avec les acces,  IL FAUT QUE LA BASE EXISTE POUR MANIPULER
+    $dbh = new PDO(
+        'mysql:host='. $db_config['host'] .':'. $db_config['port'] .';dbname='. $db_config['schema'] .";charset=". $db_config['charset'],
+        $db_config['user'],
+        $db_config['password']
+    );
 
+    /*
+     *  check/validation du formulaire
+    */
 
+    // test simple pour verifier que le champ $_POST['user_id'] existe ET (&&) contient une valeur
+    // verifier qu'il existe ca permet de ne pas avoir le message au premier chargement de page
 
-gallerie_list_view.php
-gallerie_detail_view.php
-gallerie_edit_view.php
-
-gallerie_controller.php
-
-
-
-
-
-
-
-
-
----------------------------------------------------------
-
-	ON affiche toutes les entr�es de la table projet
-
----------------------------------------------------------
-*/
-
-//requete qui doit retourner des resultats
-$results = $dbh->query("select * from galleries");
-// recupere les messages dans le connecteur
-$galleries = $results->fetchAll();
-
-for ($i = 0; $i < count($galleries); $i++) {
-?>
-    <article>
-        <h1><?= $galleries[$i]['titre'] ?></h1>
-        <date><?= $galleries[$i]['description'] ?></date>
-        <p><?= $galleries[$i]['categorie'] ?></p>
-        <p><?= $galleries[$i]['illustration'] ?></p>
-    </article>
-<?php
-}
-
-/*
----------------------------------------------------------
-
-	check du formulaire
-	
----------------------------------------------------------
-*/
-
-// test simple pour verifier que le champ $_POST['pouet'] existe ET (&&) contient une valeur
-// verfier qu'il existe ca permet de ne pas avoir le message au premier chargement de page
-
-// si name existe
-if (isset($_POST['name'])){
-    if (empty($_POST['name'])) {
-        $errors[] = 'champ name vide';
-    // si name > 50 chars
-    } else if (mb_strlen($_POST['name']) > 50) {
-        $errors[] = 'champ name trop long (50max)';
+    // si name existe
+    if (isset($_POST['user_id'])){
+        if (empty($_POST['user_id'])) {
+            $errors[] = 'champ user_id vide';
+            // si name > 50 chars
+        } else if (mb_strlen($_POST['user_id']) > 50) {
+            $errors[] = 'champ user_id trop long (50max)';
+        }
     }
-}
 
-// si email existe
-if (isset($_POST['email'])) {
-    if (empty($_POST['email'])) {
-        $errors[] = 'champ email vide';
-    } else if (mb_strlen($_POST['email']) > 150) {
-        $errors[] = 'champ email trop long (150max)';
-    // filter_var
-    } else if (!filter_var($_POST['email'], FILTER_VALIDATE_EMAIL)) {
-        $errors[] = 'champ email non-valide';
+    // si email existe
+    if (isset($_POST['user_email'])) {
+        if (empty($_POST['user_email'])) {
+            $errors[] = 'champ user_email vide';
+        } else if (mb_strlen($_POST['user_email']) > 150) {
+            $errors[] = 'champ user_email trop long (150max)';
+            // filter_var
+        } else if (!filter_var($_POST['user_email'], FILTER_VALIDATE_EMAIL)) {
+            $errors[] = 'champ user_email non-valide';
+        }
     }
+
+    // si message existe et que le champ est non vide, on utilise trim() pour enlever les espaces/tabs en debut et fin de texte
+    if (isset($_POST['content']) && empty(trim($_POST['content']))) {
+        $errors[] = 'champ content vide';
+    }
+
+
+
+
+    /*
+     *  insertion base de données
+    */
+
+    // si il existe un champ "user_id" fourni dans le $_POST, c-a-d qu'un formulaire ient d'etre valid� ET qu'il n'y a aucune erreur
+    if(isset($_POST['user_id']) && count($errors) == 0){
+
+        // ben on insere dans la table message
+        // la synaxe ":user_id" ca veut dire qu'on prepare la requete et que juste quand on la lance, on va remplacer ":user_id" par la bonne valeur.
+
+        /* syntaxe avec preparedStatements */
+        $sql = "insert into messages (user_id, content) values(:user_id, :content )";
+        $sth = $dbh->prepare($sql, array(PDO::ATTR_CURSOR => PDO::CURSOR_FWDONLY));
+        if( $sth->execute(array(
+            ':user_id' => $_POST['user_id'],
+            ':content' => $_POST['content']
+        )) ){
+            echo 'ayé c\'est inséré';
+        }
+    }
+
+
+    /*
+    * affiche toutes les entrées de la table projet.messages
+    */
+
+    //requete qui doit retourner des resultats
+    $stmt = $dbh->query("select * from messages");
+    // recupere les messages dans le connecteur
+    $results = $stmt->fetchAll();
+    foreach ($results as $item) {
+        ?>
+        <article>
+            <h1><?= $item['content'] ?></h1>
+            <date><?= $item['created'] ?></date>
+            <p><?= $item['user_id'] ?></p>
+        </article>
+        <?php
+    }
+
+}catch (Exception $e){
+    print_r($e);
 }
-
-// si message existe et que le champ est non vide, on utilise trim() pour enlever les espaces/tabs en debut et fin de texte
-if (isset($_POST['message']) && empty(trim($_POST['message']))) {
-    $errors[] = 'champ message vide';
-}
-
-
-
-
-/*
----------------------------------------------------------
-
-	insertion base de donn�es
-	
----------------------------------------------------------
-*/
-
-// si il existe un champ "name" fourni dans le $_POST, c-a-d qu'un formulaire ient d'etre valid� ET qu'il n'y a aucune erreur
-if(isset($_POST['name']) && count($errors) == 0){
-
-// ben on insere dans la table message
-// la synaxe ":name" ca veut dire qu'on prepare la requete et que juste quand on la lance, on va remplacer ":name" par la bonne valeur.
-
-/* syntaxe avec preparedStatements */
-    $sql = "insert into message (name, email, message) values(:name, :email, :message )";
-    $sth = $dbh->prepare($sql, array(PDO::ATTR_CURSOR => PDO::CURSOR_FWDONLY));
-    $sth->execute(array(
-        ':name' => $_POST['name'],
-        ':email' => $_POST['email'],
-        ':message' => $_POST['message']
-    ));
-}
-
-
 ?>
-
-
-
 
 <html>
 <head>
@@ -139,7 +111,7 @@ if(isset($_POST['name']) && count($errors) == 0){
         }
 
         .errors {
-            color: ff0000;
+            color: #ff0000;
         }
 
         fieldset {
@@ -155,61 +127,54 @@ if(isset($_POST['name']) && count($errors) == 0){
 </head>
 
 <body>
-<h1>debug</h1>
-    <pre>
+
+    <h1>debug</h1>
+    $_GET
+    <pre><?php print_r($_GET); ?></pre>
+
+    <hr/>
+
+    $_POST :
+    <pre><?php print_r($_POST); ?></pre>
+
+    <hr/>
+
+    <h1>formulaire de la win</h1>
+    <p>le formulaire va envoyer ses données a la page courante, on verifie la validité des champs en PHP et on remonte les erreurs dans le tableau $errors</p>
+    <p>si pas d'erreur on enregistre dans la table message</p>
+
+    <form method="post" action="">
+
+        <div class="errors">
 <?php
-echo '$_GET' . "\r\n";
-print_r($_GET);
+            foreach( $errors as $error) {
+                echo("<p>". $error . "</p>");
+            }
 ?>
-    </pre>
-<hr/>
-    <pre>
-<?php
-echo '$_POST' . "\r\n";
-print_r($_POST);
-?>
-    </pre>
-<hr/>
+        </div>
 
-
-
-
-<h1>formulaire de la win</h1>
-<p>
-	le formulaire va envoyer ses donn�es a la page courante, on verifie la validit� des champs en PHP et on remonte les erreurs dans le tableau $errors	
-</p>
-<p>
-	si pas d'erreur on enregistre dans la table message
-</p>
-<form method="post" action="">
-
-    <div class="errors">
-        <?php
-        for ($i = 0; $i < count($errors); $i++) {
-            echo($errors[$i] . "<br />");
-        }
-        ?>
-    </div>
-
-    <fieldset>
-        <label for="name">name</label>
-        <input type="text" name="name" value="<?php echo !empty($_POST['name']) ? ($_POST['name']) : '' ?>">
-    </fieldset>
-
-    <fieldset>
-        <label for="email">email</label>
-        <input type="text" name="email" value="<?= !empty($_POST['email']) ? ($_POST['email']) : '' ?>">
-    </fieldset>
-
-    <fieldset>
-        <label for="message">message</label>
-                <textarea name="message">
-                    <?= !empty($_POST['truc']) ? ($_POST['truc']) : '' ?>
+        <fieldset>
+            <label for="user_id">user_id
+                <input type="text" name="user_id" value="<?php echo !empty($_POST['user_id']) ? ($_POST['user_id']) : '' ?>">
+            </label>
+        </fieldset>
+<!--
+        <fieldset>
+            <label for="email">email
+                <input type="text" name="email" value="<?= !empty($_POST['email']) ? ($_POST['email']) : '' ?>">
+            </label>
+        </fieldset>
+-->
+        <fieldset>
+            <label for="content">message content
+                <textarea name="content">
+                    <?= !empty($_POST['content']) ? ($_POST['content']) : '' ?>
                 </textarea>
-    </fieldset>
+            </label>
+        </fieldset>
 
-    <input type="submit">
-</form>
+        <input type="submit">
+    </form>
 
 
 </body>
