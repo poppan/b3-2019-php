@@ -3,14 +3,14 @@
 session_start();
 
 $messages = [];
-// si il y a des messages en session on les prend et on les mets dans une variable créee pour l'occasion
+// si il y a des messages en session on les prend et on les mets dans une variable crï¿½ee pour l'occasion
 if (isset($_SESSION['messages'])) {
     $messages = $_SESSION['messages'];
     $_SESSION['messages'] = [];
 }
 
 ?>
-<h1>c'est incroyable, on a appellé le controller et il a *redirigé* vers la view ! </h1>
+<h1>c'est incroyable, on a appellÃ© le controller et il a *redirigÃ©* vers la view ! </h1>
 <ul>
 <?php    
     // pour chacun des messages on les affiche

@@ -6,7 +6,7 @@ $db_config = [
     'port'      => 3306, // 3306 est le port par defaut de mysql
     'user'      => 'mysqluser', // nom d'utilisateur
     'password'  => 'mysqlpassword', // mot de passe
-    'charset'   => 'utf8', // le charset utilisé pour communiquer avec mysql via PDO
+    'charset'   => 'utf8mb4', // le charset utilisé pour communiquer avec mysql via PDO
 ];
 
 // try/catch pour lever les erreurs de connexion
@@ -22,7 +22,8 @@ try{
     /*
      *  check/validation du formulaire
     */
-
+    // tableau d'erreurs initial, vide
+    $errors = [];
     // test simple pour verifier que le champ $_POST['user_id'] existe ET (&&) contient une valeur
     // verifier qu'il existe ca permet de ne pas avoir le message au premier chargement de page
 
@@ -62,41 +63,46 @@ try{
 
     // si il existe un champ "user_id" fourni dans le $_POST, c-a-d qu'un formulaire ient d'etre valid� ET qu'il n'y a aucune erreur
     if(isset($_POST['user_id']) && count($errors) == 0){
-
         // ben on insere dans la table message
         // la synaxe ":user_id" ca veut dire qu'on prepare la requete et que juste quand on la lance, on va remplacer ":user_id" par la bonne valeur.
 
         /* syntaxe avec preparedStatements */
-        $sql = "insert into messages (user_id, content) values(:user_id, :content )";
+        $sql = "insert into messages (user_id, content) values (:user_id, :content )";
         $sth = $dbh->prepare($sql, array(PDO::ATTR_CURSOR => PDO::CURSOR_FWDONLY));
-        if( $sth->execute(array(
+        if($sth->execute(array(
             ':user_id' => $_POST['user_id'],
             ':content' => $_POST['content']
-        )) ){
-            echo 'ayé c\'est inséré';
+        ))){
+            // success
         }
     }
 
 
-    /*
-    * affiche toutes les entrées de la table projet.messages
-    */
+    //requete qui doit retourner des resultats
+    $stmt = $dbh->query("select * from users");
+    // recupere les users et fout le resultat dans une variable sous forme de tableau de tableaux
+    $users = $stmt->fetchAll();
+
 
     //requete qui doit retourner des resultats
     $stmt = $dbh->query("select * from messages");
-    // recupere les messages dans le connecteur
-    $results = $stmt->fetchAll();
-    foreach ($results as $item) {
-        ?>
-        <article>
-            <h1><?= $item['content'] ?></h1>
-            <date><?= $item['created'] ?></date>
-            <p><?= $item['user_id'] ?></p>
-        </article>
-        <?php
+    // recupere les messages et fout le resultat dans une variable mais sous forme de tableau d'objets
+    /*
+    // possibilité de mapper sur une classe existante si elle est declarée
+    class message {
+        public $id;
+        public $created;
+        public $user_id;
+        public $login;
     }
+    // i.e la je map les champs sur une classe "message"
+    $messages = $stmt->fetchAll(PDO::FETCH_CLASS, 'message');
+    */
+    $messages = $stmt->fetchAll(PDO::FETCH_CLASS);
+
 
 }catch (Exception $e){
+    echo('cacaboudin exception');
     print_r($e);
 }
 ?>
@@ -104,78 +110,95 @@ try{
 <html>
 <head>
     <meta charset="UTF-8">
-
+    <link rel="stylesheet" href="https://puteborgne.sexy/_css/normalize.css" />
+    <link rel="stylesheet" href="https://puteborgne.sexy/_css/skeleton.css" />
     <style>
-        body {
-            font-family: Arial, Helvetica, Sans serif;
-        }
-
-        .errors {
-            color: #ff0000;
-        }
-
         fieldset {
-            border: 1px solid rgba(0, 0, 0, .125);
+            border: 0.25rem solid rgba(225,225,225,0.5);
+            border-radius: 4px;
+            padding: 1rem 2rem;
         }
-
-        label {
-            float: left;
-            min-width: 33%;
-            display: inline-block;
+        .errors {
+            color: #ff5555;
         }
     </style>
 </head>
 
 <body>
+    <div class="container">
 
-    <h1>debug</h1>
-    $_GET
-    <pre><?php print_r($_GET); ?></pre>
+        <div class="row">
+            <h1>formulaire de la win</h1>
+            <p>le formulaire va envoyer ses données a la page courante, on verifie la validité des champs en PHP et on remonte les erreurs dans le tableau $errors</p>
+            <p>si pas d'erreur on enregistre dans la table message</p>
 
-    <hr/>
+            <ul class="errors">
+                <?php
+                foreach( $errors as $error) {
+                    echo("<li>". $error . "</li>");
+                }
+                ?>
+            </ul>
 
-    $_POST :
-    <pre><?php print_r($_POST); ?></pre>
-
-    <hr/>
-
-    <h1>formulaire de la win</h1>
-    <p>le formulaire va envoyer ses données a la page courante, on verifie la validité des champs en PHP et on remonte les erreurs dans le tableau $errors</p>
-    <p>si pas d'erreur on enregistre dans la table message</p>
-
-    <form method="post" action="">
-
-        <div class="errors">
-<?php
-            foreach( $errors as $error) {
-                echo("<p>". $error . "</p>");
-            }
-?>
+            <form method="post" action="" id="messageForm">
+                <fieldset>
+                    <legend>message</legend>
+                    <label for="messageUserId">user_id</label>
+                    <select id="messageUserId" name="user_id">
+                        <?php
+                        foreach ($users as $user) {
+                            ?>
+                            <option value="<?= $user['id'] ?>"><?= $user['login'] ?></option>
+                            <?php
+                        }
+                        ?>
+                    </select>
+                    <!--
+                    <input type="text" id="messageUserId" name="user_id" value="<?php echo !empty($_POST['user_id']) ? ($_POST['user_id']) : '' ?>">
+                    -->
+                    <label for="messageContent">message content</label>
+                    <textarea id="messageContent" name="content"><?= !empty($_POST['content']) ? trim($_POST['content']) : '' ?></textarea>
+                </fieldset>
+                <input type="submit" value="Envoyer" class="button-primary">
+            </form>
         </div>
 
-        <fieldset>
-            <label for="user_id">user_id
-                <input type="text" name="user_id" value="<?php echo !empty($_POST['user_id']) ? ($_POST['user_id']) : '' ?>">
-            </label>
-        </fieldset>
-<!--
-        <fieldset>
-            <label for="email">email
-                <input type="text" name="email" value="<?= !empty($_POST['email']) ? ($_POST['email']) : '' ?>">
-            </label>
-        </fieldset>
--->
-        <fieldset>
-            <label for="content">message content
-                <textarea name="content">
-                    <?= !empty($_POST['content']) ? ($_POST['content']) : '' ?>
-                </textarea>
-            </label>
-        </fieldset>
+        <div class="row">
+            <div class="one-half column">
+                $_GET
+                <pre><?php print_r($_GET) ?></pre>
+            </div>
+            <div class="one-half column">
+                $_POST :
+                <pre><?php print_r($_POST) ?></pre>
+            </div>
+        </div>
 
-        <input type="submit">
-    </form>
-
-
+        <div class="row">
+            <h2>Messages</h2>
+            <table class="u-full-width">
+                <thead>
+                <tr>
+                    <th>content</th>
+                    <th>created</th>
+                    <th>user_id</th>
+                </tr>
+                </thead>
+                <tbody>
+                <?php
+                foreach ($messages as $message) {
+                    ?>
+                    <tr>
+                        <td><?= $message->content ?></td>
+                        <td><?= $message->created ?></td>
+                        <td><?= $message->user_id ?></td>
+                    </tr>
+                    <?php
+                }
+                ?>
+                </tbody>
+            </table>
+        </div>
+    </div>
 </body>
 </html>

@@ -13,7 +13,7 @@ $_SESSION['ta_mere'] = "la molle";
 
 <h1>Mise en Session</h1>
 <p>
-	une superglobale tres spécial en PHP, $_SESSION permet de stocker des données persistantes.
+	une superglobale tres spÃ©ciale en PHP, $_SESSION permet de stocker des donnÃ©es persistantes.
 </p>
 <p>
 	a noter que pour pouvoir UTILISER $_SESSION en lecture ou en ecriture il faut le demander avant, ca se fait en appellant "session_start()"
@@ -33,7 +33,7 @@ $_SESSION['ta_mere'] = "la molle";
 </code>
 
 <p>
-	si je demande a la page suivante la valeur de $_SESSION['ta_mere'] ca me la rend car ca l'a conservé.
+	si je demande a la page suivante la valeur de $_SESSION['ta_mere'] ca me la rend car ca l'a conservÃ©.
 </p>
 <a href="02-session-get.php">autre page</a>
 
