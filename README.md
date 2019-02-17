@@ -8,7 +8,7 @@
  
 # 00 - install apache/php/mysql
 Dans le terminal (phpstorm ou xterm)
-
+    > sudo apt-get update
     > sudo apt-get install apache2 mysql-server php libapache2-mod-php php-mysql php-mbstring php-cgi
 
 # 03 - setup mysql
