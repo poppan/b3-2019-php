@@ -35,7 +35,7 @@ $errors = isset($_SESSION['errors']) ? $_SESSION['errors'] : [];
             ?>
         </ul>
 
-        <form method="post" action="../controllers/users_controller.php?action=register" id="userRegisterForm">
+        <form method="post" action="?action=register" id="userRegisterForm">
             <fieldset>
                 <legend>user register</legend>
                 <label for="userLogin">login</label>

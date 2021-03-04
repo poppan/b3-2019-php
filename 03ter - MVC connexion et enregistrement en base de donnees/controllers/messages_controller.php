@@ -1,32 +1,43 @@
 <?php
-require_once('../config/db_config.php');
+require_once('../models/Message.class.php');
 //demarrage session
 session_start();
 
 // try/catch pour lever les erreurs de connexion
 try {
-    // on se connecte avec les acces,  IL FAUT QUE LA BASE EXISTE POUR MANIPULER
-    $dbh = new PDO(
-        'mysql:host=' . $db_config['host'] . ':' . $db_config['port'] . ';dbname=' . $db_config['schema'] . ";charset=" . $db_config['charset'],
-        $db_config['user'],
-        $db_config['password']
-    );
-    // tableau d'erreurs initial, vide
-    $errors = [];
+	$action = isset($_GET['action']) ? $_GET['action'] : '';
 
-    $action = isset($_GET['action']) ? $_GET['action'] : '';
+	$message = new Message();
 
-    switch ($action){
-         default;
-            //requete qui doit retourner des resultats
-            $stmt = $dbh->query("select * from messages");
-            $messages = $stmt->fetchAll(PDO::FETCH_CLASS);
-            $_SESSION['messages'] = $messages;
-            header('Location: ../views/messages_list.php');
-            break;
-    }
+	switch ($action){
+
+		case 'list':
+			$messages = $message->findAll();
+			include('../views/messages_list.php');
+			break;
+		case 'jsonlist':
+			$messages = $message->findAll();
+			header("Access-Control-Allow-Origin: *");
+			header('Content-type: application/json; charset=UTF-8');
+			echo json_encode($messages);
+			break;
+
+		case 'create';
+			if ($message->save($_POST)){
+				$_SESSION['errors'] = [];
+				header('Location: ?action=list');
+
+			}else{
+				$_SESSION['errors'] = $message->errors;
+				include('../views/messages_create.php');
+			}
+			break;
+		default:
+			header('Location: ?action=list');
+			break;
+	}
 } catch (Exception $e) {
-    echo('cacaboudin exception');
-    print_r($e);
+	echo('cacaboudin exception');
+	print_r($e);
 }
 ?>

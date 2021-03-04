@@ -1,7 +1,7 @@
 <?php
-session_start();
-$errors = isset($_SESSION['errors']) ? $_SESSION['errors'] : [];
-$messages = isset($_SESSION['messages']) ? $_SESSION['messages'] : [];
+//session_start();
+//$errors = isset($_SESSION['errors']) ? $_SESSION['errors'] : [];
+//$messages = isset($_SESSION['messages']) ? $_SESSION['messages'] : [];
 ?>
 
 <html>

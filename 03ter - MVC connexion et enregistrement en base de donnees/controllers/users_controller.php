@@ -1,20 +1,10 @@
 <?php
-require_once('../config/db_config.php');
 require_once('../models/User.class.php');
 //demarrage session
 session_start();
 
 // try/catch pour lever les erreurs de connexion
 try {
-    // on se connecte avec les acces,  IL FAUT QUE LA BASE EXISTE POUR MANIPULER
-    $dbh = new PDO(
-        'mysql:host=' . $db_config['host'] . ':' . $db_config['port'] . ';dbname=' . $db_config['schema'] . ";charset=" . $db_config['charset'],
-        $db_config['user'],
-        $db_config['password']
-    );
-    // tableau d'erreurs initial, vide
-    $errors = [];
-
     $action = isset($_GET['action']) ? $_GET['action'] : '';
 
     $user = new User();
@@ -22,33 +12,35 @@ try {
     switch ($action){
         case 'login':
             if ($user->login($_POST)){
-                $_SESSION['errors'] = [];
-                header('Location: ../controllers/users_controller.php?action=list');
-                die;
+                $_SESSION['user'] = $user;
+                header('Location: ?action=list');
+            }else{
+	            include('../views/users_login.php');
             }
-            // put errors in $session
-            $_SESSION['errors'] = $errors;
-            header('Location: ../views/users_login.php');
             break;
-
         case 'list':
-            $_SESSION['errors'] = [];
             $users = $user->findAll();
-            $_SESSION['users'] = $users;
-            header('Location: ../views/users_list.php');
+            include('../views/users_list.php');
+            break;
+        case 'jsonlist':
+            $users = $user->findAll();
+            header("Access-Control-Allow-Origin: *");
+            header('Content-type: application/json; charset=UTF-8');
+            echo json_encode($users);
             break;
 
         case 'register';
             if ($user->save($_POST)){
                 $_SESSION['errors'] = [];
-                header('Location: ../views/users_list.php');
-                die;
+                header('Location: ?action=login');
+
+            }else{
+                $_SESSION['errors'] = $user->errors;
+                include('../views/users_register.php');
             }
-            $_SESSION['errors'] = $user->errors;
-            header('Location: ../views/users_register.php');
             break;
         default:
-            header('Location: ../views/users_login.php');
+            header('Location: ?action=login');
             break;
     }
 } catch (Exception $e) {
