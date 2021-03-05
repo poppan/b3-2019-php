@@ -10,7 +10,23 @@ if (!isset($_SESSION['user']) || !isset($_SESSION['user']->id)) {
 
 // try/catch pour lever les erreurs de connexion
 try {
-	$action = isset($_GET['action']) ? $_GET['action'] : '';
+//
+//	$monGET = [
+//		'poney'=>'toto',
+//		'canard' => 'donald'
+//	];
+//	$monPOST = [
+//		'poney'=>'julio',
+//	];
+//	$data   = array_merge($monGET, $monPOST);
+
+	$data = array_merge($_GET, $_POST);
+
+	print_r($data);
+	//die;
+
+
+	$action = isset($data['action']) ? $data['action'] : '';
 
 	$message = new Message();
 
@@ -28,25 +44,28 @@ try {
 			break;
 
 		case 'edit';
-			if ($message->save($_POST)) {
+			if ($message->save($data)) {
 				$_SESSION['errors'] = [];
 				header('Location: ?action=list');
 
 			} else {
 
 
-				// si y'a un id je le charge initialement
-				$message_id = $_GET['id'];
-				// si il existe pas en $_GET je cherche dans le $_POST
-				if(empty($message_id)){
-					$message_id = $_POST['id'];
-				}
+//				// si y'a un id je le charge initialement
+//				$message_id = $_GET['id'];
+//				// si il existe pas en $_GET je cherche dans le $_POST
+//				if(empty($message_id)){
+//					$message_id = $_POST['id'];
+//				}
 				// sinon tant pis , ballec
-				$message = new Message($message_id);
+				$message = new Message($data['id']);
+
+				// le message est soit vide (pas d'id correspondant)
+				// le message et prerempli
 
 // surcharge si fournie
 				$message->user_id = !empty($_SESSION['user']->id) ? ($_SESSION['user']->id) : $message->user_id;
-				$message->content = !empty($_POST['content']) ? ($_POST['content']) : $message->content;
+				$message->content = !empty($data['content']) ? ($data['content']) : $message->content;
 
 				$_SESSION['errors'] = $message->errors;
 				include('../views/messages_edit.php');
