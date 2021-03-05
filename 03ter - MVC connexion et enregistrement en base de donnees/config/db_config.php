@@ -1,7 +1,7 @@
 <?php
 // connection base mysql
 $db_config = [
-	'host' => '', // machine, la machine locale s'appelle par convention "localhost"
+	'host' => '51.159.24.60', // machine, la machine locale s'appelle par convention "localhost"
 	'schema' => 'projet', // nom du schema
 	'port' => 36059, // 3306 est le port par defaut de mysql
 	'user' => 'rototo', // nom d'utilisateur

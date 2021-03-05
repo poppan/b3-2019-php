@@ -4,6 +4,7 @@ require_once('../models/User.class.php');
 session_start();
 
 // try/catch pour lever les erreurs de connexion
+//pour identifier les action demandées on utilise la QUERY STRING ($_GET) et le parametre "action" => ?action=xxx
 try {
     $action = isset($_GET['action']) ? $_GET['action'] : '';
 
@@ -28,7 +29,6 @@ try {
             header('Content-type: application/json; charset=UTF-8');
             echo json_encode($users);
             break;
-
         case 'register';
             if ($user->save($_POST)){
                 $_SESSION['errors'] = [];

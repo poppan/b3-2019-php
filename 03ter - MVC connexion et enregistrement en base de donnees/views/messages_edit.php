@@ -35,16 +35,19 @@ $errors = isset($_SESSION['errors']) ? $_SESSION['errors'] : [];
             ?>
         </ul>
 
-        <form method="post" action="?action=create" id="messageCreateForm">
+        <form method="post" action="?action=edit" id="messageCreateForm">
             <fieldset>
-                <legend>message create</legend>
+                <legend>message edit</legend>
+
+                <label for="id">id</label>
+                <input type="text" id="id" name="id" value="<?php echo !empty($message->id) ? ($message->id) : '' ?>">
 
                 <label for="userId">user_id</label>
-                <input type="text" id="user_id" name="user_id" value="<?php echo !empty($_SESSION['user']->id) ? ($_SESSION['user']->id) : '' ?>">
+                <input type="text" id="user_id" name="user_id" value="<?php echo !empty($message->user_id) ? ($message->user_id) : '' ?>">
 
 
                 <label for="messageContent">content</label>
-                <input type="text" id="content" name="content" value="<?php echo !empty($_POST['content']) ? ($_POST['content']) : '' ?>">
+                <input type="text" id="content" name="content" value="<?php echo !empty($message->content) ? ($message->content) : '' ?>">
 
             </fieldset>
             <input type="submit" value="Envoyer" class="button-primary">

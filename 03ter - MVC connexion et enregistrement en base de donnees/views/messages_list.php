@@ -31,9 +31,12 @@
         <table class="u-full-width">
             <thead>
             <tr>
+                <th>action</th>
                 <th>content</th>
                 <th>created</th>
+                <th>modified</th>
                 <th>user_id</th>
+
             </tr>
             </thead>
             <tbody>
@@ -41,9 +44,12 @@
             foreach ($messages as $message) {
                 ?>
                 <tr>
+                    <td><a href="?action=edit&id=<?= $message->id ?>">editer message : <?= $message->id ?></a></td>
                     <td><?= $message->content ?></td>
                     <td><?= $message->created ?></td>
+                    <td><?= $message->modified ?></td>
                     <td><?= $message->user_id ?></td>
+
                 </tr>
                 <?php
             }
